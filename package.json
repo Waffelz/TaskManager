@@ -1,0 +1,23 @@
+{
+  "name": "Schedulerbot",
+  "version": "1.0.0",
+  "description": "A slack bot that allows team members to actively schedule meetings onto google calendar",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swethaakella/Schedulerbot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swethaakella/Schedulerbot/issues"
+  },
+  "homepage": "https://github.com/swethaakella/Schedulerbot#readme",
+  "dependencies": {
+    "@slack/client": "^3.10.0"
+  }
+}
