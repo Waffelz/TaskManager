@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/swethaakella/Schedulerbot#readme",
   "dependencies": {
-    "@slack/client": "^3.10.0"
+    "@slack/client": "^3.10.0",
+    "axios": "^0.16.2"
   }
 }
