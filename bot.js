@@ -5,6 +5,8 @@ var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var rtm = new RtmClient(process.env.SLACK_BOT_TOKEN2);
 
 let channel;
+var userMsg;
+var userId;
 
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
   for (const c of rtmStartData.channels) {
@@ -23,7 +25,21 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 //   });
 // };
 
-rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+rtm.on(RTM_EVENTS.MESSAGE, function (message) {
+  userMsg = message.text;
+  userId = message.user;
+  axios.post(
+    'https:api.api.ai/v1/query?v=20150910', {
+      "query": userMsg,
+      "timezone": "America/New_York",
+      "lang": "en",
+      "sessionId": userId,
+      "headers": {`Authorization: Bearer ${process.env.API_AI_TOKEN}`}
+    }
+  ).then(function(payload) {
+    console.log(payload);
+  })
+
   rtm.sendMessage('Hey', channel) //this is no doubt the lamest possible message handler, but you get the idea
 });
 
