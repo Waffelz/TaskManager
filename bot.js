@@ -5,9 +5,9 @@ var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var rtm = new RtmClient(process.env.SLACK_BOT_TOKEN2);
 var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(process.env.SLACK_BOT_TOKEN2); // export rtm and web
-var mongoose = require('mongoose');
-var connect = process.env.MONGODB_URI;
-var models = require('../calendar/models');
+//var mongoose = require('mongoose');
+//var connect = process.env.MONGODB_URI;
+//var models = require('../calendar/models');
 
 var axios = require('axios');
 
@@ -15,7 +15,7 @@ let channel;
 var userMsg;
 var userId;
 
-mongoose.connect(connect);
+//mongoose.connect(connect);
 
 
 
@@ -40,7 +40,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   userMsg = message.text;
   userId = message.user;
-var userobj=rtm.DataStore.getUserbyId(userId)//where is DataStore
+var userobj=rtm.dataStore.getUserbyId(userId)//where is DataStore
 
   models.User.findOne({slack_id: userId}, function(err, user){
     if(!user){
