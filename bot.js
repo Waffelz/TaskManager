@@ -47,10 +47,14 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
     ).then(function(payload) {
       //console.log("this is your data");
     //  if (payload.data.result.actionIncomplete)
-      rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+      //rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
       // else {
       //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
       // }
+      if (payload.data.result.action.split('.')[0] === "smalltalk")
+        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+      else {
+        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
 
       if (! payload.data.result.actionIncomplete) {
         console.log("hey");
@@ -84,6 +88,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
           }
         )
       }
+    }
       console.log(payload);
     }).catch(function(err) {
       console.log('eerrrrr', err)
