@@ -12,10 +12,12 @@ var OAuth2 = google.auth.OAuth2;
 
 mongoose.connect(connect);
 var app = express();
+
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
+  console.log('niside connect');
  if(req.query.auth_id){
-
+   console.log('has auth id');
    var oauth2Client = new OAuth2(
      process.env.YOUR_CLIENT_ID,
      process.env.YOUR_CLIENT_SECRET,
@@ -32,9 +34,12 @@ app.get('/connect', function(req, res){
        'https://www.googleapis.com/auth/calendar'
      ],
      // Optional property that passes state parameters to redirect URI
-     state: encodeURIComponent(JSON.stringfy({
-       auth_id: JSON.parse(decodeURIComponent(req.query.auth_id))
-     }))
+     state: encodeURIComponent(JSON.stringify({
+       auth_id: req.query.auth_id}))
+
+    // state: {
+    //   auth_id: req.query.auth_id
+    // }
    });
    res.redirect(url)
  }
@@ -45,11 +50,36 @@ app.get('/connect', function(req, res){
 // state=parse req.query.state to get auth_id
 
 app.get('/connect/callback', function(req, res){
+  var oauth2Client = new OAuth2(
+    process.env.YOUR_CLIENT_ID,
+    process.env.YOUR_CLIENT_SECRET,
+    process.env.YOUR_REDIRECT_URL+'/connect/callback'//developer console redirect url
+  );
+
+var authid=decodeURIComponent(req.query.state)
+var code=req.query.code
+
+console.log('AUTHOBJ', JSON.parse(authid).auth_id)
   oauth2Client.getToken(code, function (err, tokens) {//contain google.token
       // Now tokens contains an access_token and an optional refresh_token. Save them.
 
+    // Add google token to Schema
+    models.User.findOne({_id: JSON.parse(authid).auth_id}, function(err, user){
+      user.google=tokens
+      user.save(function(err, user) {
+        if (err) {
+          console.log('CHECK', err);
+        } else {
+          dbuser=user
+        console.log('SAVED', user);
+      }
+    });
+
+    })
+
     if (!err) {
       oauth2Client.setCredentials(tokens);
+      res.send('gg')
     }
   });
 })
@@ -59,7 +89,7 @@ app.get('/interactive', function(req, res){
   res.send('gg')
 })
 // new client
-// code=req.query.code
+
 
 
 
