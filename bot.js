@@ -5,9 +5,10 @@ var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var rtm = new RtmClient(process.env.SLACK_BOT_TOKEN2);
 var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(process.env.SLACK_BOT_TOKEN2); // export rtm and web
-//var mongoose = require('mongoose');
+
+var mongoose = require('mongoose');
 //var connect = process.env.MONGODB_URI;
-//var models = require('../calendar/models');
+var models = require('./calendar/models');
 
 var axios = require('axios');
 
@@ -21,7 +22,7 @@ var userId;
 
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
   for (const c of rtmStartData.channels) {
-    if (c.is_member && c.name ==='swetha') { channel = c.id }
+    if (c.is_member && c.name ==='xy') { channel = c.id }
   }
 });
 
@@ -40,26 +41,30 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   userMsg = message.text;
   userId = message.user;
-var userobj=rtm.dataStore.getUserbyId(userId)//where is DataStore
+
+var userobj=rtm.dataStore.getUserById(userId)//where is DataStore
+
+console.log('HEEEEEE', userobj)
+console.log('/connect?auth_id='+userId)
 
   models.User.findOne({slack_id: userId}, function(err, user){
     if(!user){
       var u = new models.User({
-        slack_id: userobj.slack_id,
-        slack_username: userobj.slack_username,
-        slack_email: userobj.slack_email,
-        slack_dmid: userobj.slack_dmid,
+        slack_id: userobj.id,
+        slack_username: userobj.name,
+        slack_email: userobj.profile.email,
+        // slack_dmid: userobj.slack_dmid,
       });
       u.save(function(err, user) {
         if (err) {
-          console.log(err);
+          console.log('CHECK', err);
         } else {
-        console.log('saved', user);
+        console.log('SAVED', user);
       }
       });
-       rtm.sendMessage('Grant me access', '/connect?auth_id='+userId)
+       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
     } else if (!userobj.google){
-       rtm.sendMessage('Grant me access', '/connect?auth_id='+userId)
+       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
      }
    })
 //proceed to api.ai here
@@ -84,6 +89,7 @@ var userobj=rtm.dataStore.getUserbyId(userId)//where is DataStore
       // else {
       //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
       // }
+
       if (payload.data.result.action.split('.')[0] === "smalltalk")
         rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
       else {
@@ -122,9 +128,9 @@ var userobj=rtm.dataStore.getUserbyId(userId)//where is DataStore
         )
       }
     }
-      console.log(payload);
+      // console.log(payload);
     }).catch(function(err) {
-      console.log('eerrrrr', err)
+      // console.log('eerrrrr', err)
     })
   }
 });
