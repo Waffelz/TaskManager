@@ -5,31 +5,16 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var connect = process.env.MONGODB_URI;
 var models = require('./models');
-var rtm =require('../bot')
+var {rtm, web} =require('../bot')
 
 var google = require('googleapis');
 var OAuth2 = google.auth.OAuth2;
 
+mongoose.connect(connect);
 var app = express();
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
  if(req.query.auth_id){
-
-   var userobj=rtm.DataStore.getUserbyId(message.user)//query body?
-
-   var u = new models.User({
-     slack_id: userobj.slack_id,
-     slack_username: userobj.slack_username,
-     slack_email: userobj.slack_email,
-     slack_dmid: userobj.slack_dmid,
-   });
-   u.save(function(err, user) {
-     if (err) {
-       console.log(err);
-     } else {
-     console.log(user);
-   }
-   });
 
    var oauth2Client = new OAuth2(
      process.env.YOUR_CLIENT_ID,
@@ -48,21 +33,12 @@ app.get('/connect', function(req, res){
      ],
      // Optional property that passes state parameters to redirect URI
      state: encodeURIComponent(JSON.stringfy({
-       auth_id: JSON.parse(decodeURIComponent(req.query.state))
+       auth_id: JSON.parse(decodeURIComponent(req.query.auth_id))
      }))
    });
    res.redirect(url)
-
  }
-
 })
-
-
-
-//
-// check req.query.auth_id
-// findbyid
-// generate redirect
 
 
 
