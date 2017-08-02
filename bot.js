@@ -6,7 +6,7 @@ var rtm = new RtmClient(process.env.SLACK_BOT_TOKEN2);
 var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(process.env.SLACK_BOT_TOKEN2); // export rtm and web
 
-var mongoose = require('mongoose');
+// var mongoose = require('mongoose');
 //var connect = process.env.MONGODB_URI;
 var models = require('./calendar/models');
 
@@ -39,18 +39,24 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 
 
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
-  userMsg = message.text;
-  userId = message.user;
 
-var userobj=rtm.dataStore.getUserById(userId)//where is DataStore
+  var dm = rtm.dataStore.getDMByUserId(message.user);
+ if (!dm || dm.id !== message.channel || message.type !== 'message') {
+   return;
+ }
+  var userMsg = message.text;
+  var userId = message.user;
 
-console.log('HEEEEEE', userobj)
-console.log('/connect?auth_id='+userId)
-
+var userobj=rtm.dataStore.getUserById(userId)
+var dbuser;
+var userInDb = false;
   models.User.findOne({slack_id: userId}, function(err, user){
+    console.log('HERE YOU ARE', user)
+    dbuser=user
     if(!user){
+      console.log('gonna save user')
       var u = new models.User({
-        slack_id: userobj.id,
+        slack_id: userId,
         slack_username: userobj.name,
         slack_email: userobj.profile.email,
         // slack_dmid: userobj.slack_dmid,
@@ -59,20 +65,22 @@ console.log('/connect?auth_id='+userId)
         if (err) {
           console.log('CHECK', err);
         } else {
+          dbuser=user
         console.log('SAVED', user);
+        var authlink= process.env.DOMAIN + '/connect?auth_id='+dbuser._id
+        rtm.sendMessage('Grant me access '+ authlink, message.channel)
       }
-      });
-       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
-    } else if (!userobj.google){
-       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
-     }
-   })
-//proceed to api.ai here
+    });
+
+  } else if (!dbuser.google){// Check if Google Key exists
+    console.log('checking google key')
+      var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
+      rtm.sendMessage('Grant me access '+ authlink, message.channel)
+    }
+})
 
 
-
-
-  if (message.subtype !== 'bot_message') {
+//proceed to api.ai
     axios.post(
       'https://api.api.ai/api/query?v=20150910', {
         query: userMsg,
@@ -90,9 +98,9 @@ console.log('/connect?auth_id='+userId)
       //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
       // }
 
-      if (payload.data.result.action.split('.')[0] === "smalltalk")
-        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-      else {
+      // if (payload.data.result.action.split('.')[0] === "smalltalk")
+      //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+
         rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
 
       if (! payload.data.result.actionIncomplete) {
@@ -127,13 +135,12 @@ console.log('/connect?auth_id='+userId)
           }
         )
       }
-    }
       // console.log(payload);
     }).catch(function(err) {
       // console.log('eerrrrr', err)
     })
-  }
 });
+
 // var slackUser = rtm.dataStore.getUserById(msg.user) // ALL STILL IN THE RTM ON FUNCTION
 // if (!slackUser) {
 //   throw error
