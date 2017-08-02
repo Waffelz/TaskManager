@@ -6,6 +6,7 @@ var userSchema = mongoose.Schema({
   slack_email: String,
   slack_dmid: String,
   google: Object,
+  pendingAction: Object
 });
 
 // var Task=mongoose.Schema({

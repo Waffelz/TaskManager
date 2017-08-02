@@ -149,8 +149,6 @@ var userInDb = false;
 // create a route called interactive where we get a message
 
 
-rtm.start();
-
 module.exports = {
   rtm,
   web

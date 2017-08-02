@@ -4,11 +4,27 @@ var bodyParser = require('body-parser');
 
 var app = express();
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+
 //var { rtm, web } = require('./bot');
 
 app.post('/interactive', function(req, res) {
-  console.log("HEEEEYYYY");
+  var b0dy = JSON.parse(req.body.payload);
+  var wutDidTheySay = b0dy.actions[0].name;
+  if (wutDidTheySay === 'yes') {
+    var event = {
+      summary: 'task',
+      start: {
+        'date':
+      }
+    }
+  }
   res.end();
+
+// if they clicked yes, get the json object with the subject and date and send it to the server so this can be sent
+// to google calendar
+
   // if (!req.body.payload)
   // return res.status(400)
   //

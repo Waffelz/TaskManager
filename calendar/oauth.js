@@ -79,7 +79,7 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
 
     if (!err) {
       oauth2Client.setCredentials(tokens);
-      res.send('gg')
+      rtm.send('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!')
     }
   });
 })
@@ -94,7 +94,7 @@ app.get('/interactive', function(req, res){
 
 
 
-// rtm.start()
+rtm.start()
 var port = 3000;
 app.listen(port);
 console.log('Express started. Listening on port %s', port);
