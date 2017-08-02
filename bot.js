@@ -22,7 +22,7 @@ var userId;
 
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
   for (const c of rtmStartData.channels) {
-    if (c.is_member && c.name ==='swetha') { channel = c.id }
+    if (c.is_member && c.name ==='xy') { channel = c.id }
   }
 });
 
@@ -42,26 +42,29 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   userMsg = message.text;
   userId = message.user;
 
-  var userobj=rtm.dataStore.getUserById(userId)//where is DataStore
+var userobj=rtm.dataStore.getUserById(userId)//where is DataStore
+
+console.log('HEEEEEE', userobj)
+console.log('/connect?auth_id='+userId)
 
   models.User.findOne({slack_id: userId}, function(err, user){
     if(!user){
       var u = new models.User({
-        slack_id: userobj.slack_id,
-        slack_username: userobj.slack_username,
-        slack_email: userobj.slack_email,
-        slack_dmid: userobj.slack_dmid,
+        slack_id: userobj.id,
+        slack_username: userobj.name,
+        slack_email: userobj.profile.email,
+        // slack_dmid: userobj.slack_dmid,
       });
       u.save(function(err, user) {
         if (err) {
-          console.log(err);
+          console.log('CHECK', err);
         } else {
-        console.log('saved', user);
+        console.log('SAVED', user);
       }
       });
-       rtm.sendMessage('Grant me access: '  + '/connect?auth_id='+userId, message.channel)
+       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
     } else if (!userobj.google){
-       rtm.sendMessage('Grant me access: ' + '/connect?auth_id='+userId, message.channel)
+       rtm.sendMessage('Grant me access '+ '/connect?auth_id='+userId, message.channel)
      }
    })
 //proceed to api.ai here
@@ -91,8 +94,6 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
         rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
       else {
         rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-
-          console.log(payload.data.result.parameters);
 
       if (! payload.data.result.actionIncomplete) {
         console.log("hey");
@@ -127,9 +128,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
         )
       }
     }
-      console.log(payload);
+      // console.log(payload);
     }).catch(function(err) {
-      console.log('eerrrrr', err)
+      // console.log('eerrrrr', err)
     })
   }
 });
