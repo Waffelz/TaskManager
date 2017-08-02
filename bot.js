@@ -34,59 +34,61 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   userMsg = message.text;
   userId = message.user;
-  axios.post(
-    'https://api.api.ai/api/query?v=20150910', {
-      query: userMsg,
-      timezone: "America/Los_Angeles",
-      lang: "en",
-      sessionId: userId,
-    }, {
-      headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
-    }
-  ).then(function(payload) {
-    //console.log("this is your data");
-  //  if (payload.data.result.actionIncomplete)
-    rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-    // else {
-    //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
-    // }
+  if (message.subtype !== 'bot_message') {
+    axios.post(
+      'https://api.api.ai/api/query?v=20150910', {
+        query: userMsg,
+        timezone: "America/Los_Angeles",
+        lang: "en",
+        sessionId: userId,
+      }, {
+        headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
+      }
+    ).then(function(payload) {
+      //console.log("this is your data");
+    //  if (payload.data.result.actionIncomplete)
+      rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+      // else {
+      //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
+      // }
 
-    if (! payload.data.result.actionIncomplete) {
-      console.log("hey");
-      web.chat.postMessage(
-        message.channel,
-        "Aight imma make a reminder: ",
-        {
-          "text": "Would you like me to set the reminder right now?",
-          "attachments": [
-            {
-              "fallback": "You have to pick",
-              "callback_id": "confirmation",
-              "color": "#000",
-              "attachment_type": "default",
-              "actions": [
-                {
-                  "name": "yes",
-                  "text": "yes",
-                  "type": "button",
-                  "value": "yes"
-                },
-                {
-                  "name": "no",
-                  "text": "no",
-                  "type": "button",
-                  "value": "no"
-                }
-              ]
-            }
-          ]
-        }
-      )
-    }
-    console.log(payload);
-  }).catch(function(err) {
-    console.log('eerrrrr', err)
-  })
+      if (! payload.data.result.actionIncomplete) {
+        console.log("hey");
+        web.chat.postMessage(
+          message.channel,
+          "Aight imma make a reminder: ",
+          {
+            "text": "Would you like me to set the reminder right now?",
+            "attachments": [
+              {
+                "fallback": "You have to pick",
+                "callback_id": "confirmation",
+                "color": "#000",
+                "attachment_type": "default",
+                "actions": [
+                  {
+                    "name": "yes",
+                    "text": "yes",
+                    "type": "button",
+                    "value": "yes"
+                  },
+                  {
+                    "name": "no",
+                    "text": "no",
+                    "type": "button",
+                    "value": "no"
+                  }
+                ]
+              }
+            ]
+          }
+        )
+      }
+      console.log(payload);
+    }).catch(function(err) {
+      console.log('eerrrrr', err)
+    })
+  }
 });
 // var slackUser = rtm.dataStore.getUserById(msg.user) // ALL STILL IN THE RTM ON FUNCTION
 // if (!slackUser) {
@@ -97,3 +99,8 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
 
 
 rtm.start();
+
+module.exports = {
+  rtm,
+  web
+}
