@@ -52,7 +52,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
           slack_id: userId,
           slack_username: userobj.name,
           slack_email: userobj.profile.email,
-          // slack_dmid: userobj.slack_dmid,
+          slack_dmid: message.channel,
         });
         u.save(function(err, user) {
           if (err) {
@@ -69,82 +69,87 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
         rtm.sendMessage('Grant me access '+ authlink, message.channel)
       } else {
         //proceed to api.ai
-        axios.post(
-          'https://api.api.ai/api/query?v=20150910', {
-            query: userMsg,
-            timezone: "America/Los_Angeles",
-            lang: "en",
-            sessionId: userId,
-          }, {
-            headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
-          }
-        ).then(function(payload) {
-
-
-          // if (payload.data.result.action.split('.')[0] === "smalltalk")
-          //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-
-          rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-          models.User.findOne({
-            slack_id: userId
-          }, function(err, user){
-            console.log("BELOW IS USER")
-            console.log(user)
-            if (err) {
-              console.log(err);
+        if (user.pendingAction) {
+          rtm.sendMessage("Sorry! You have to first tell me if you want me to or not!", message.channel)
+        }
+        else {
+          axios.post(
+            'https://api.api.ai/api/query?v=20150910', {
+              query: userMsg,
+              timezone: "America/Los_Angeles",
+              lang: "en",
+              sessionId: userId,
+            }, {
+              headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
             }
-            else if (! payload.data.result.actionIncomplete) {
-              user.pendingAction = {
-                date: payload.data.result.parameters.date,
-                subject: payload.data.result.parameters.subject,
-                channel: message.channel
-              }
-              user.save(function(err, user) {
-                if (err) {
-                  console.log('omg')
-                }
-                else {
-                  console.log('pending action updated')
-                }
-              })
-              console.log("hey");
-              web.chat.postMessage(
-                message.channel,
-                "Aight imma make a reminder: ",
-                {
-                  "text": "Would you like me to set the reminder right now?",
-                  "attachments": [
-                    {
-                      "fallback": "You have to pick",
-                      "callback_id": "confirmation",
-                      "color": "#000",
-                      "attachment_type": "default",
-                      "actions": [
-                        {
-                          "name": "yes",
-                          "text": "yes",
-                          "type": "button",
-                          "value": "yes"
-                        },
-                        {
-                          "name": "no",
-                          "text": "no",
-                          "type": "button",
-                          "value": "no"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              )//post message 
-            }//pending action does not exist else close
-            // console.log(payload);
-          })//inner findone close
-          .catch(function(err) {
-            console.log('eerrrrr', err)
-          })
+          ).then(function(payload) {
 
-        })//payload then close
+
+            // if (payload.data.result.action.split('.')[0] === "smalltalk")
+            //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+
+            rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+            models.User.findOne({
+              slack_id: userId
+            }, function(err, user){
+              console.log("BELOW IS USER")
+              console.log(user)
+              if (err) {
+                console.log(err);
+              }
+              else if (! payload.data.result.actionIncomplete) {
+                user.pendingAction = {
+                  date: payload.data.result.parameters.date,
+                  subject: payload.data.result.parameters.subject,
+                  channel: message.channel
+                }
+                user.save(function(err, user) {
+                  if (err) {
+                    console.log('omg')
+                  }
+                  else {
+                    console.log('pending action updated')
+                  }
+                })
+                console.log("hey");
+                web.chat.postMessage(
+                  message.channel,
+                  "Aight imma make a reminder: ",
+                  {
+                    "text": "Would you like me to set the reminder right now?",
+                    "attachments": [
+                      {
+                        "fallback": "You have to pick",
+                        "callback_id": "confirmation",
+                        "color": "#000",
+                        "attachment_type": "default",
+                        "actions": [
+                          {
+                            "name": "yes",
+                            "text": "yes",
+                            "type": "button",
+                            "value": "yes"
+                          },
+                          {
+                            "name": "no",
+                            "text": "no",
+                            "type": "button",
+                            "value": "no"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                )//post message
+              }//pending action does not exist else close
+              // console.log(payload);
+            })//inner findone close
+            .catch(function(err) {
+              console.log('eerrrrr', err)
+            })
+
+          })// payload then close
+        }
       };//google authed close else
     });//findone close
 });//onmessage close

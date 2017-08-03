@@ -71,7 +71,6 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
     // Add google token to Schema
     console.log("below is token")
     console.log(tokens);
-    var dbuser;
     models.User.findOne({_id: JSON.parse(authid).auth_id}, function(err, user){
       console.log(tokens);
       user.google=tokens
@@ -79,12 +78,13 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
         if (err) {
           console.log('CHECK', err);
         } else {
-          dbuser=user
           if (!err) {
             //console.log(dbuser.pendingAction.channel)
+            console.log("THIS IS THE USER")
+            console.log(user);
             oauth2Client.setCredentials(tokens);
-            rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', 'D6G6F0MQU' )
-            res.send('hey');
+            rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', user.slack_dmid )
+            res.send("You've granted me google access, congrats!");
           }
         console.log('SAVED', user);
       }
@@ -124,7 +124,7 @@ app.post('/interactive', function(req, res) {
       //find the user in db, looking 'pending field for task info and make the event' only if action is yes
         if (wutDidTheySay === 'yes') {
           var event = {
-            'summary': 'hi',
+            'summary': user.pendingAction.subject,
             'start': {
               'date': user.pendingAction.date,
               'time': 'America/Los_Angeles'
@@ -140,7 +140,27 @@ app.post('/interactive', function(req, res) {
               'overrides': [],
             }
           };
-        }
+          user.pendingAction=null
+          user.save(function(err, user) {
+            if (err) {
+              console.log('CHECK', err);
+            } else {
+              console.console.log('cleared pending action');
+            }
+        })
+      }
+
+      if (wutDidTheySay === 'no'){
+        user.pendingAction=null
+        user.save(function(err, user) {
+          if (err) {
+            console.log('CHECK', err);
+          } else {
+            console.console.log('cleared pending action');
+            rtm.sendMessage
+          }
+      })
+    }
 
         calendar.events.insert({
           auth: oauth2Client,
