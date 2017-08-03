@@ -110,6 +110,7 @@ app.post('/interactive', function(req, res) {
       console.log('Found user err is', err);
     } else {
       oauth2Client.setCredentials(user.google)
+      console.log("THIS IS THE USER")
       console.log(user)
       channel= user.pendingAction.channel
       var wutDidTheySay = b0dy.actions[0].name;
