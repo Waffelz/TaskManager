@@ -148,20 +148,6 @@ app.post('/interactive', function(req, res) {
               console.console.log('cleared pending action');
             }
         })
-      }
-
-      if (wutDidTheySay === 'no'){
-        user.pendingAction=null
-        user.save(function(err, user) {
-          if (err) {
-            console.log('CHECK', err);
-          } else {
-            console.console.log('cleared pending action');
-            rtm.sendMessage
-          }
-      })
-    }
-
         calendar.events.insert({
           auth: oauth2Client,
           calendarId: 'primary',
@@ -175,6 +161,33 @@ app.post('/interactive', function(req, res) {
           }
         });
       rtm.sendMessage('Ok! Adding task now! ', channel)
+      }
+
+      if (wutDidTheySay === 'no'){
+        user.pendingAction=null
+        user.save(function(err, user) {
+          if (err) {
+            console.log('CHECK', err);
+          } else {
+            //console.console.log('cleared pending action');
+            rtm.sendMessage("Ok! I won't add the task!", channel)
+          }
+      })
+    }
+
+      //   calendar.events.insert({
+      //     auth: oauth2Client,
+      //     calendarId: 'primary',
+      //     resource: event,
+      //   }, function(err, event) {
+      //     if (err) {
+      //       console.log('There was an error contacting the Calendar service: ' + err);
+      //     }
+      //     else {
+      //       console.log('Event created: %s', event.htmlLink);
+      //     }
+      //   });
+      // rtm.sendMessage('Ok! Adding task now! ', channel)
       res.end();
     }
   })
