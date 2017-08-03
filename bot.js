@@ -89,8 +89,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
             }, function(err, user){
               if (err) {
                 console.log(err);
-              }
-              else if (! payload.data.result.actionIncomplete) {
+              } else if (! payload.data.result.actionIncomplete) {
                 user.pendingAction = {
                   date: payload.data.result.parameters.date,
                   subject: payload.data.result.parameters.subject,

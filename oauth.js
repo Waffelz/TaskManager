@@ -117,6 +117,7 @@ app.post('/interactive', function(req, res) {
       //var slackID = b0dy.user.id;
       //var tasks = Task.find({user_id:slackID});
         if (wutDidTheySay === 'yes') {
+          console.log('selected yes')
           var event = {
             'summary': user.pendingAction.subject,
             'start': {
@@ -135,6 +136,7 @@ app.post('/interactive', function(req, res) {
             }
             // save event based on google calendar api to save task
           };
+          console.log('event created')
           user.pendingAction=null
           user.save(function(err, user) {
             if (err) {
@@ -159,6 +161,7 @@ app.post('/interactive', function(req, res) {
       }
 
       if (wutDidTheySay === 'no'){
+        console.log('selected no')
         user.pendingAction=null
         user.save(function(err, user) {
           if (err) {
