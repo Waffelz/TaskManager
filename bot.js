@@ -49,11 +49,12 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
 
 var userobj=rtm.dataStore.getUserById(userId)
 var dbuser;
-var userInDb = false;
   models.User.findOne({slack_id: userId}, function(err, user){
     console.log('HERE YOU ARE', user)
     dbuser=user
-    if(!user){
+  })
+
+    if(!dbuser){
       console.log('gonna save user')
       var u = new models.User({
         slack_id: userId,
@@ -61,6 +62,7 @@ var userInDb = false;
         slack_email: userobj.profile.email,
         // slack_dmid: userobj.slack_dmid,
       });
+
       u.save(function(err, user) {
         if (err) {
           console.log('CHECK', err);
@@ -71,7 +73,6 @@ var userInDb = false;
         rtm.sendMessage('Grant me access '+ authlink, message.channel)
       }
     });
-
   } else if (!dbuser.google){// Check if Google Key exists
     console.log('checking google key')
       var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
@@ -102,11 +103,11 @@ var userInDb = false;
         models.User.findOne({
           slack_id: userId
         }, function(err, user){
+
           if (err) {
             console.log(err);
           }
-          else {
-            if (! payload.data.result.actionIncomplete) {
+          else if (! payload.data.result.actionIncomplete) {
               user.pendingAction = {
                 date: payload.data.result.parameters.date,
                 subject: payload.data.result.parameters.subject,
@@ -161,15 +162,14 @@ var userInDb = false;
                   ]
                 }
               )
-            }
+            }//else if bracket
             // console.log(payload);
-          })
+          })//inner findone bracket
           .catch(function(err) {
              console.log('eerrrrr', err)
           })
 
-          }
-        })
+        })//payload bracket
 
       //   if (! payload.data.result.actionIncomplete) {
       //     // new models.Task({
@@ -218,10 +218,8 @@ var userInDb = false;
       // }).catch(function(err) {
       //   // console.log('eerrrrr', err)
       // })
-    }
-})
-
-});
+    }//if google authed bracket
+});//onmessage bracket
 
 // var slackUser = rtm.dataStore.getUserById(msg.user) // ALL STILL IN THE RTM ON FUNCTION
 // if (!slackUser) {
