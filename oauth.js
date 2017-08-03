@@ -138,7 +138,7 @@ app.post('/interactive', function(req, res) {
             if (err) {
               console.log('CHECK', err);
             } else {
-              console.console.log('cleared pending action');
+              console.log('cleared pending action');
             }
         })
         calendar.events.insert({
