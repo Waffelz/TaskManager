@@ -106,68 +106,118 @@ var userInDb = false;
             console.log(err);
           }
           else {
-            user.pendingAction = {
-              date: payload.data.result.parameters.date,
-              channel: message.channel
-            }
-            user.save(function(err, user) {
-              if (err) {
-                console.log('omg')
+            if (! payload.data.result.actionIncomplete) {
+              user.pendingAction = {
+                date: payload.data.result.parameters.date,
+                subject: payload.data.result.parameters.subject,
+                channel: message.channel
               }
-              else {
-                console.log('pending action updated')
-              }
-            })
-          }
-        })
-
-        if (! payload.data.result.actionIncomplete) {
-          new models.Task({
-            date: payload.data.result.parameters.date,
-            subject: payload.data.result.parameters.subject,
-            user_id: user.id,
-            pending: true // switch when you actually save the task
-          }).save(function(err, task) {
-            if (err)
-              console.log(err)
-            else
-              console.log('saved ', task)
-          })
-          console.log("hey");
-          web.chat.postMessage(
-            message.channel,
-            "Aight imma make a reminder: ",
-            {
-              "text": "Would you like me to set the reminder right now?",
-              "attachments": [
+              user.save(function(err, user) {
+                if (err) {
+                  console.log('omg')
+                }
+                else {
+                  console.log('pending action updated')
+                }
+              })
+              // new models.Task({
+              //   date: payload.data.result.parameters.date,
+              //   subject: payload.data.result.parameters.subject,
+              //   user_id: user.id,
+              //   pending: true // switch when you actually save the task
+              // }).save(function(err, task) {
+              //   if (err)
+              //     console.log(err)
+              //   else
+              //     console.log('saved ', task)
+              // })
+              console.log("hey");
+              web.chat.postMessage(
+                message.channel,
+                "Aight imma make a reminder: ",
                 {
-                  "fallback": "You have to pick",
-                  "callback_id": "confirmation",
-                  "color": "#000",
-                  "attachment_type": "default",
-                  "actions": [
+                  "text": "Would you like me to set the reminder right now?",
+                  "attachments": [
                     {
-                      "name": "yes",
-                      "text": "yes",
-                      "type": "button",
-                      "value": "yes"
-                    },
-                    {
-                      "name": "no",
-                      "text": "no",
-                      "type": "button",
-                      "value": "no"
+                      "fallback": "You have to pick",
+                      "callback_id": "confirmation",
+                      "color": "#000",
+                      "attachment_type": "default",
+                      "actions": [
+                        {
+                          "name": "yes",
+                          "text": "yes",
+                          "type": "button",
+                          "value": "yes"
+                        },
+                        {
+                          "name": "no",
+                          "text": "no",
+                          "type": "button",
+                          "value": "no"
+                        }
+                      ]
                     }
                   ]
                 }
-              ]
+              )
             }
-          )
-        }
-        // console.log(payload);
-      }).catch(function(err) {
-        // console.log('eerrrrr', err)
-      })
+            // console.log(payload);
+          })
+          .catch(function(err) {
+             console.log('eerrrrr', err)
+          })
+
+          }
+        })
+
+      //   if (! payload.data.result.actionIncomplete) {
+      //     // new models.Task({
+      //     //   date: payload.data.result.parameters.date,
+      //     //   subject: payload.data.result.parameters.subject,
+      //     //   user_id: user.id,
+      //     //   pending: true // switch when you actually save the task
+      //     // }).save(function(err, task) {
+      //     //   if (err)
+      //     //     console.log(err)
+      //     //   else
+      //     //     console.log('saved ', task)
+      //     // })
+      //     console.log("hey");
+      //     web.chat.postMessage(
+      //       message.channel,
+      //       "Aight imma make a reminder: ",
+      //       {
+      //         "text": "Would you like me to set the reminder right now?",
+      //         "attachments": [
+      //           {
+      //             "fallback": "You have to pick",
+      //             "callback_id": "confirmation",
+      //             "color": "#000",
+      //             "attachment_type": "default",
+      //             "actions": [
+      //               {
+      //                 "name": "yes",
+      //                 "text": "yes",
+      //                 "type": "button",
+      //                 "value": "yes"
+      //               },
+      //               {
+      //                 "name": "no",
+      //                 "text": "no",
+      //                 "type": "button",
+      //                 "value": "no"
+      //               }
+      //             ]
+      //           }
+      //         ]
+      //       }
+      //     )
+      //   }
+      //   // console.log(payload);
+      // }).catch(function(err) {
+      //   // console.log('eerrrrr', err)
+      // })
     }
 })
 

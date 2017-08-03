@@ -102,9 +102,9 @@ app.post('/interactive', function(req, res) {
 
   var b0dy = JSON.parse(req.body.payload);
   var wutDidTheySay = b0dy.actions[0].name;
-  var slackID = b0dy.user.id;
-  var tasks = Task.find({user_id:slackID});
-  await tasks.forEach(async function(task) {
+  //var slackID = b0dy.user.id;
+  //var tasks = Task.find({user_id:slackID});
+  //find the user in db, looking 'pending field for task info and make the event' only if action is yes
     if (wutDidTheySay === 'yes') {
       var event = {
         'summary': 'task',
@@ -124,12 +124,11 @@ app.post('/interactive', function(req, res) {
         }
       };
     }
-  })
 
     calendar.events.insert({
       auth: oauth2Client,
       calendarId: 'primary',
-      resource: resource,
+      resource: event,
     }, function(err, event) {
       if (err) {
         console.log('There was an error contacting the Calendar service: ' + err);
