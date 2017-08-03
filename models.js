@@ -9,7 +9,7 @@ var userSchema = mongoose.Schema({
   pendingAction: Object
 });
 
-var Task=mongoose.Schema({
+var taskSchema =mongoose.Schema({
   date: String,
   subject: String,
   user_id: String,
