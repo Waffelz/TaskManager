@@ -104,50 +104,62 @@ app.post('/interactive', function(req, res) {
     process.env.DOMAIN+'/connect/callback'//developer console redirect url
   );
 
+ var channel
+
   var b0dy = JSON.parse(req.body.payload);
-  var wutDidTheySay = b0dy.actions[0].name;
-  //var slackID = b0dy.user.id;
-  //var tasks = Task.find({user_id:slackID});
-  //find the user in db, looking 'pending field for task info and make the event' only if action is yes
-    if (wutDidTheySay === 'yes') {
-      var event = {
-        'summary': 'hi',
-        'start': {
-          'date': new Date(),
-          'time': 'America/Los_Angeles'
-        },
-        'end': {
-          'date': new Date(),
-          'time': 'America/Los_Angeles'
-        },
-        'recurrence': [],
-        'attendees': [],
-        'reminders': {
-          'userDefault': false,
-          'overrides': [],
+  console.log("THIS IS THE PAYLOAD BODY")
+  console.log(b0dy);
+
+  models.User.findOne({
+    slack_id: b0dy.user.id
+  }, function (err, user){
+    if (err) {
+      console.log('Found user err is', err);
+    } else {
+      oauth2Client.setCredentials(user.google)
+      channel= user.pendingAction.channel
+      var wutDidTheySay = b0dy.actions[0].name;
+      //var slackID = b0dy.user.id;
+      //var tasks = Task.find({user_id:slackID});
+      //find the user in db, looking 'pending field for task info and make the event' only if action is yes
+        if (wutDidTheySay === 'yes') {
+          var event = {
+            'summary': 'hi',
+            'start': {
+              'date': user.pendingAction.date,
+              'time': 'America/Los_Angeles'
+            },
+            'end': {
+              'date': user.pendingAction.date,
+              'time': 'America/Los_Angeles'
+            },
+            'recurrence': [],
+            'attendees': [],
+            'reminders': {
+              'userDefault': false,
+              'overrides': [],
+            }
+          };
         }
-      };
+
+        calendar.events.insert({
+          auth: oauth2Client,
+          calendarId: 'primary',
+          resource: event,
+        }, function(err, event) {
+          if (err) {
+            console.log('There was an error contacting the Calendar service: ' + err);
+          }
+          else {
+            console.log('Event created: %s', event.htmlLink);
+          }
+        });
+      rtm.sendMessage('Ok! Adding task now! ', channel)
+      res.end();
     }
+  })
 
-    calendar.events.insert({
-      auth: oauth2Client,
-      calendarId: 'primary',
-      resource: event,
-    }, function(err, event) {
-      if (err) {
-        console.log('There was an error contacting the Calendar service: ' + err);
-      }
-      else {
-        console.log('Event created: %s', event.htmlLink);
-      }
-    });
-  rtm.sendMessage('Ok! Adding task now! ', 'D6G6F0MQU')
-  res.end();
 })
-
-
-
-
 
 rtm.start()
 var port = 3000;
