@@ -122,6 +122,17 @@ var userInDb = false;
         })
 
         if (! payload.data.result.actionIncomplete) {
+          new models.Task({
+            date: payload.data.result.parameters.date,
+            subject: payload.data.result.parameters.subject,
+            user_id: user.id,
+            pending: true // switch when you actually save the task
+          }).save(function(err, task) {
+            if (err)
+              console.log(err)
+            else
+              console.log('saved ', task)
+          })
           console.log("hey");
           web.chat.postMessage(
             message.channel,

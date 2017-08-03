@@ -11,6 +11,8 @@ var google = require('googleapis');
 var calendar = google.calendar('v3');
 var OAuth2 = google.auth.OAuth2;
 
+Task = models.Task
+
 mongoose.connect(connect);
 var app = express();
 app.use(bodyParser.json());
@@ -100,7 +102,8 @@ app.post('/interactive', function(req, res) {
 
   var b0dy = JSON.parse(req.body.payload);
   var wutDidTheySay = b0dy.actions[0].name;
-  var tasks = await Task.find({user_idL slackID});
+  var slackID = b0dy.user.id;
+  var tasks = Task.find({user_id:slackID});
   await tasks.forEach(async function(task) {
     if (wutDidTheySay === 'yes') {
       var event = {
