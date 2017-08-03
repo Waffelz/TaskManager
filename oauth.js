@@ -20,9 +20,7 @@ app.use(bodyParser.urlencoded({extended: false}))
 
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
-  console.log('niside connect');
  if(req.query.auth_id){
-   console.log('has auth id');
    var oauth2Client = new OAuth2(
      process.env.GOOGLE_CLIENT_ID,
      process.env.GOOGLE_CLIENT_SECRET,
@@ -33,7 +31,6 @@ app.get('/connect', function(req, res){
      // 'online' (default) or 'offline' (gets refresh_token)
      access_type: 'offline',
      prompt: 'consent',
-     // If you only need one scope you can pass it as a string
      scope: [
        'https://www.googleapis.com/auth/plus.me',
        'https://www.googleapis.com/auth/calendar'
@@ -50,10 +47,9 @@ app.get('/connect', function(req, res){
  }
 })
 
-
-
 // state=parse req.query.state to get auth_id
 
+//oauth stuff
 app.get('/connect/callback', function(req, res){
   var oauth2Client = new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -64,15 +60,12 @@ app.get('/connect/callback', function(req, res){
 var authid=decodeURIComponent(req.query.state)
 var code=req.query.code
 
-console.log('AUTHOBJ', JSON.parse(authid).auth_id)
+
   oauth2Client.getToken(code, function (err, tokens) {//contain google.token
       // Now tokens contains an access_token and an optional refresh_token. Save them.
 
     // Add google token to Schema
-    console.log("below is token")
-    console.log(tokens);
     models.User.findOne({_id: JSON.parse(authid).auth_id}, function(err, user){
-      console.log(tokens);
       user.google=tokens
       user.save(function(err, user) {
         if (err) {
@@ -80,8 +73,6 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
         } else {
           if (!err) {
             //console.log(dbuser.pendingAction.channel)
-            console.log("THIS IS THE USER")
-            console.log(user);
             oauth2Client.setCredentials(tokens);
             rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', user.slack_dmid )
             res.send("You've granted me google access, congrats!");
@@ -96,7 +87,7 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
   });
 })
 
-
+// after authentication when user hits interactive message
 app.post('/interactive', function(req, res) {
   var oauth2Client = new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -107,8 +98,6 @@ app.post('/interactive', function(req, res) {
  var channel
 
   var b0dy = JSON.parse(req.body.payload);
-  console.log("THIS IS THE PAYLOAD BODY")
-  console.log(b0dy);
 
   models.User.findOne({
     slack_id: b0dy.user.id
@@ -121,7 +110,6 @@ app.post('/interactive', function(req, res) {
       var wutDidTheySay = b0dy.actions[0].name;
       //var slackID = b0dy.user.id;
       //var tasks = Task.find({user_id:slackID});
-      //find the user in db, looking 'pending field for task info and make the event' only if action is yes
         if (wutDidTheySay === 'yes') {
           var event = {
             'summary': user.pendingAction.subject,
@@ -139,6 +127,7 @@ app.post('/interactive', function(req, res) {
               'userDefault': false,
               'overrides': [],
             }
+            // save event based on google calendar api to save task
           };
           user.pendingAction=null
           user.save(function(err, user) {
@@ -175,19 +164,6 @@ app.post('/interactive', function(req, res) {
       })
     }
 
-      //   calendar.events.insert({
-      //     auth: oauth2Client,
-      //     calendarId: 'primary',
-      //     resource: event,
-      //   }, function(err, event) {
-      //     if (err) {
-      //       console.log('There was an error contacting the Calendar service: ' + err);
-      //     }
-      //     else {
-      //       console.log('Event created: %s', event.htmlLink);
-      //     }
-      //   });
-      // rtm.sendMessage('Ok! Adding task now! ', channel)
       res.end();
     }
   })

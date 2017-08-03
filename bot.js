@@ -5,8 +5,7 @@ var rtm = new RtmClient(process.env.SLACK_BOT_TOKEN2);
 var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(process.env.SLACK_BOT_TOKEN2); // export rtm and web
 
-// var mongoose = require('mongoose');
-//var connect = process.env.MONGODB_URI;
+
 var models = require('./models');
 
 var axios = require('axios');
@@ -14,9 +13,6 @@ var axios = require('axios');
 let channel;
 var userMsg;
 var userId;
-
-//mongoose.connect(connect);
-
 
 
 rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
@@ -47,7 +43,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
       console.log('err', err);
     } else if (!user) {
       //do anything you need to do knowing you have no user
-        console.log('gonna save user')
+
         var u = new models.User({
           slack_id: userId,
           slack_username: userobj.name,
@@ -58,7 +54,6 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
           if (err) {
             console.log('CHECK', err);
           } else {
-            console.log('SAVED', user);
             var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
             rtm.sendMessage('Grant me access '+ authlink, message.channel)
           }
@@ -92,8 +87,6 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
             models.User.findOne({
               slack_id: userId
             }, function(err, user){
-              console.log("BELOW IS USER")
-              console.log(user)
               if (err) {
                 console.log(err);
               }
@@ -111,7 +104,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
                     console.log('pending action updated')
                   }
                 })
-                console.log("hey");
+                // interactive message code
                 web.chat.postMessage(
                   message.channel,
                   "Aight imma make a reminder: ",

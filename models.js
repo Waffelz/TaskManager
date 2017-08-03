@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 
+//creating users
 var userSchema = mongoose.Schema({
   slack_id: String,
   slack_username: String,
@@ -8,14 +9,14 @@ var userSchema = mongoose.Schema({
   google: Object,
   pendingAction: Object
 });
-
+//creating tasks
 var taskSchema =mongoose.Schema({
   date: String,
   subject: String,
   user_id: String,
   pending: Boolean
  })
-//hey
+
 
 
 User = mongoose.model('User', userSchema);
