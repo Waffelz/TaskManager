@@ -4,6 +4,7 @@
   "description": "A slack bot that allows team members to actively schedule meetings onto google calendar",
   "main": "app.js",
   "scripts": {
+    "start": "node oauth.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
