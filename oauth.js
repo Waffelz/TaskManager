@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var connect = process.env.MONGODB_URI;
 var models = require('./models');
-var {rtm, web} =require('./fakeFakeBot')
+var {rtm, web} =require('./bot')
 var google = require('googleapis');
 var calendar = google.calendar('v3');
 var OAuth2 = google.auth.OAuth2;
@@ -69,26 +69,30 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
       // Now tokens contains an access_token and an optional refresh_token. Save them.
 
     // Add google token to Schema
+    console.log("below is token")
+    console.log(tokens);
     var dbuser;
     models.User.findOne({_id: JSON.parse(authid).auth_id}, function(err, user){
-      user.google=token
+      console.log(tokens);
+      user.google=tokens
       user.save(function(err, user) {
         if (err) {
           console.log('CHECK', err);
         } else {
           dbuser=user
+          if (!err) {
+            //console.log(dbuser.pendingAction.channel)
+            oauth2Client.setCredentials(tokens);
+            rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', 'D6G6F0MQU' )
+            res.send('hey');
+          }
         console.log('SAVED', user);
       }
     });
 
     })
 
-    if (!err) {
-      console.log(dbuser.pendingAction.channel)
-      oauth2Client.setCredentials(tokens);
-      rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', dbuser.pendingAction.channel )
-      res.end();
-    }
+
   });
 })
 

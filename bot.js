@@ -103,7 +103,8 @@ var dbuser;
         models.User.findOne({
           slack_id: userId
         }, function(err, user){
-
+          console.log("BELOW IS USER")
+          console.log(user)
           if (err) {
             console.log(err);
           }
