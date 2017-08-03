@@ -175,7 +175,7 @@ app.post('/interactive', function(req, res) {
 })
 
 rtm.start()
-var port = 3000;
+var port = process.env.PORT || 3000;
 app.listen(port);
 console.log('Express started. Listening on port %s', port);
 
