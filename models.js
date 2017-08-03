@@ -9,19 +9,21 @@ var userSchema = mongoose.Schema({
   pendingAction: Object
 });
 
-// var Task=mongoose.Schema({
-//   date: String,
-//   subject: String
-// })
+var Task=mongoose.Schema({
+  date: String,
+  subject: String,
+  user_id: String,
+  pending: Boolean
+ })
 //hey
 
 
 User = mongoose.model('User', userSchema);
-// Task = mongoose.model('Task', taskSchema);
+ Task = mongoose.model('Task', taskSchema);
 
 
 module.exports = {
     User:User,
-    // Task:Task,
+    Task:Task,
 
 };

@@ -97,38 +97,44 @@ app.post('/interactive', function(req, res) {
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.DOMAIN+'/connect/callback'//developer console redirect url
   );
+
   var b0dy = JSON.parse(req.body.payload);
   var wutDidTheySay = b0dy.actions[0].name;
-  if (wutDidTheySay === 'yes') {
-    var event = {
-      'summary': 'task',
-      'start': {
-        'date': new Date(),
-        'time': 'America/Los_Angeles'
-      },
-      'end': {
-        'date': new Date(),
-        'time': 'America/Los_Angeles'
-      },
-      'recurrence': [],
-      'attendees': [],
-      'reminders': {
-        'userDefault': false,
-        'overrides': [],
-      }
-    };
+  var tasks = await Task.find({user_idL slackID});
+  await tasks.forEach(async function(task) {
+    if (wutDidTheySay === 'yes') {
+      var event = {
+        'summary': 'task',
+        'start': {
+          'date': new Date(),
+          'time': 'America/Los_Angeles'
+        },
+        'end': {
+          'date': new Date(),
+          'time': 'America/Los_Angeles'
+        },
+        'recurrence': [],
+        'attendees': [],
+        'reminders': {
+          'userDefault': false,
+          'overrides': [],
+        }
+      };
+    }
+  })
+
     calendar.events.insert({
       auth: oauth2Client,
       calendarId: 'primary',
-      resource: event,
+      resource: resource,
     }, function(err, event) {
       if (err) {
-    console.log('There was an error contacting the Calendar service: ' + err);
-    return;
-  }
-  console.log('Event created: %s', event.htmlLink);
-});
-}
+        console.log('There was an error contacting the Calendar service: ' + err);
+      }
+      else {
+        console.log('Event created: %s', event.htmlLink);
+      }
+    });
   rtm.sendMessage('Ok! Adding task now! ', 'D6G6F0MQU')
   res.end();
 })
