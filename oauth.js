@@ -2,16 +2,19 @@ var express = require('express');
 var path = require('path');
 var bodyParser = require('body-parser');
 
+
 var mongoose = require('mongoose');
 var connect = process.env.MONGODB_URI;
 var models = require('./models');
-var {rtm, web} =require('../bot')
-
+var {rtm, web} =require('./bot')
 var google = require('googleapis');
+var calendar = google.calendar('v3');
 var OAuth2 = google.auth.OAuth2;
 
 mongoose.connect(connect);
 var app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}))
 
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
@@ -19,9 +22,9 @@ app.get('/connect', function(req, res){
  if(req.query.auth_id){
    console.log('has auth id');
    var oauth2Client = new OAuth2(
-     process.env.YOUR_CLIENT_ID,
-     process.env.YOUR_CLIENT_SECRET,
-     process.env.YOUR_REDIRECT_URL+'/connect/callback'//developer console redirect url
+     process.env.GOOGLE_CLIENT_ID,
+     process.env.GOOGLE_CLIENT_SECRET,
+     process.env.DOMAIN+'/connect/callback'//developer console redirect url
    );
    // generate a url that asks permissions for Google+ and Google Calendar scopes
    var url = oauth2Client.generateAuthUrl({
@@ -51,9 +54,9 @@ app.get('/connect', function(req, res){
 
 app.get('/connect/callback', function(req, res){
   var oauth2Client = new OAuth2(
-    process.env.YOUR_CLIENT_ID,
-    process.env.YOUR_CLIENT_SECRET,
-    process.env.YOUR_REDIRECT_URL+'/connect/callback'//developer console redirect url
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.DOMAIN+'/connect/callback'//developer console redirect url
   );
 
 var authid=decodeURIComponent(req.query.state)
@@ -64,8 +67,9 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
       // Now tokens contains an access_token and an optional refresh_token. Save them.
 
     // Add google token to Schema
+    var dbuser;
     models.User.findOne({_id: JSON.parse(authid).auth_id}, function(err, user){
-      user.google=tokens
+      user.google=token
       user.save(function(err, user) {
         if (err) {
           console.log('CHECK', err);
@@ -78,17 +82,56 @@ console.log('AUTHOBJ', JSON.parse(authid).auth_id)
     })
 
     if (!err) {
+      console.log(dbuser.pendingAction.channel)
       oauth2Client.setCredentials(tokens);
-      rtm.send('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!')
+      rtm.sendMessage('Ok thank you! Remind me to do something. Beware that you must give me a subject and date!', dbuser.pendingAction.channel )
+      res.end();
     }
   });
 })
 
 
-app.get('/interactive', function(req, res){
-  res.send('gg')
+app.post('/interactive', function(req, res) {
+  var oauth2Client = new OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.DOMAIN+'/connect/callback'//developer console redirect url
+  );
+  var b0dy = JSON.parse(req.body.payload);
+  var wutDidTheySay = b0dy.actions[0].name;
+  if (wutDidTheySay === 'yes') {
+    var event = {
+      'summary': 'task',
+      'start': {
+        'date': new Date(),
+        'time': 'America/Los_Angeles'
+      },
+      'end': {
+        'date': new Date(),
+        'time': 'America/Los_Angeles'
+      },
+      'recurrence': [],
+      'attendees': [],
+      'reminders': {
+        'userDefault': false,
+        'overrides': [],
+      }
+    };
+    calendar.events.insert({
+      auth: oauth2Client,
+      calendarId: 'primary',
+      resource: event,
+    }, function(err, event) {
+      if (err) {
+    console.log('There was an error contacting the Calendar service: ' + err);
+    return;
+  }
+  console.log('Event created: %s', event.htmlLink);
+});
+}
+  rtm.sendMessage('Ok! Adding task now! ', 'D6G6F0MQU')
+  res.end();
 })
-// new client
 
 
 

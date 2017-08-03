@@ -1,4 +1,3 @@
-
 var RtmClient = require('@slack/client').RtmClient;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
@@ -8,7 +7,7 @@ var web = new WebClient(process.env.SLACK_BOT_TOKEN2); // export rtm and web
 
 // var mongoose = require('mongoose');
 //var connect = process.env.MONGODB_URI;
-var models = require('./calendar/models');
+var models = require('./models');
 
 var axios = require('axios');
 
@@ -39,6 +38,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function(message) {
 
 
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
+  console.log('message', message.channel);
 
   var dm = rtm.dataStore.getDMByUserId(message.user);
  if (!dm || dm.id !== message.channel || message.type !== 'message') {
@@ -76,69 +76,90 @@ var userInDb = false;
     console.log('checking google key')
       var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
       rtm.sendMessage('Grant me access '+ authlink, message.channel)
+    } else {
+      //proceed to api.ai
+      axios.post(
+        'https://api.api.ai/api/query?v=20150910', {
+          query: userMsg,
+          timezone: "America/Los_Angeles",
+          lang: "en",
+          sessionId: userId,
+        }, {
+          headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
+        }
+      ).then(function(payload) {
+        //console.log("this is your data");
+      //  if (payload.data.result.actionIncomplete)
+        //rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+        // else {
+        //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
+        // }
+
+        // if (payload.data.result.action.split('.')[0] === "smalltalk")
+        //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+
+        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+        models.User.findOne({
+          slack_id: userId
+        }, function(err, user){
+          if (err) {
+            console.log(err);
+          }
+          else {
+            user.pendingAction = {
+              date: payload.data.result.parameters.date,
+              channel: message.channel
+            }
+            user.save(function(err, user) {
+              if (err) {
+                console.log('omg')
+              }
+              else {
+                console.log('pending action updated')
+              }
+            })
+          }
+        })
+
+        if (! payload.data.result.actionIncomplete) {
+          console.log("hey");
+          web.chat.postMessage(
+            message.channel,
+            "Aight imma make a reminder: ",
+            {
+              "text": "Would you like me to set the reminder right now?",
+              "attachments": [
+                {
+                  "fallback": "You have to pick",
+                  "callback_id": "confirmation",
+                  "color": "#000",
+                  "attachment_type": "default",
+                  "actions": [
+                    {
+                      "name": "yes",
+                      "text": "yes",
+                      "type": "button",
+                      "value": "yes"
+                    },
+                    {
+                      "name": "no",
+                      "text": "no",
+                      "type": "button",
+                      "value": "no"
+                    }
+                  ]
+                }
+              ]
+            }
+          )
+        }
+        // console.log(payload);
+      }).catch(function(err) {
+        // console.log('eerrrrr', err)
+      })
     }
 })
 
-
-//proceed to api.ai
-    axios.post(
-      'https://api.api.ai/api/query?v=20150910', {
-        query: userMsg,
-        timezone: "America/Los_Angeles",
-        lang: "en",
-        sessionId: userId,
-      }, {
-        headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
-      }
-    ).then(function(payload) {
-      //console.log("this is your data");
-    //  if (payload.data.result.actionIncomplete)
-      //rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-      // else {
-      //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
-      // }
-
-      // if (payload.data.result.action.split('.')[0] === "smalltalk")
-      //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-
-        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-
-      if (! payload.data.result.actionIncomplete) {
-        console.log("hey");
-        web.chat.postMessage(
-          message.channel,
-          "Aight imma make a reminder: ",
-          {
-            "text": "Would you like me to set the reminder right now?",
-            "attachments": [
-              {
-                "fallback": "You have to pick",
-                "callback_id": "confirmation",
-                "color": "#000",
-                "attachment_type": "default",
-                "actions": [
-                  {
-                    "name": "yes",
-                    "text": "yes",
-                    "type": "button",
-                    "value": "yes"
-                  },
-                  {
-                    "name": "no",
-                    "text": "no",
-                    "type": "button",
-                    "value": "no"
-                  }
-                ]
-              }
-            ]
-          }
-        )
-      }
-      // console.log(payload);
-    }).catch(function(err) {
-      // console.log('eerrrrr', err)
-    })
 });
 
 // var slackUser = rtm.dataStore.getUserById(msg.user) // ALL STILL IN THE RTM ON FUNCTION
@@ -148,6 +169,8 @@ var userInDb = false;
 
 // create a route called interactive where we get a message
 
+
+//rtm.start();
 
 module.exports = {
   rtm,
