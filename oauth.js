@@ -162,7 +162,7 @@ app.post('/interactive', function(req, res) {
           if (err) {
             console.log('CHECK', err);
           } else {
-            //console.console.log('cleared pending action');
+          console.log('NAAAAAAA');
             rtm.sendMessage("Ok! I won't add the task!", channel)
           }
       })
