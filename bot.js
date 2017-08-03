@@ -101,38 +101,39 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
                   }
                   else {
                     console.log('pending action updated')
-                  }
-                })
-                // interactive message code
-                web.chat.postMessage(
-                  message.channel,
-                  "Aight imma make a reminder: ",
-                  {
-                    "text": "Would you like me to set the reminder right now?",
-                    "attachments": [
+                    web.chat.postMessage(
+                      message.channel,
+                      "Aight imma make a reminder: ",
                       {
-                        "fallback": "You have to pick",
-                        "callback_id": "confirmation",
-                        "color": "#000",
-                        "attachment_type": "default",
-                        "actions": [
+                        "text": "Would you like me to set the reminder right now?",
+                        "attachments": [
                           {
-                            "name": "yes",
-                            "text": "yes",
-                            "type": "button",
-                            "value": "yes"
-                          },
-                          {
-                            "name": "no",
-                            "text": "no",
-                            "type": "button",
-                            "value": "no"
+                            "fallback": "You have to pick",
+                            "callback_id": "confirmation",
+                            "color": "#000",
+                            "attachment_type": "default",
+                            "actions": [
+                              {
+                                "name": "yes",
+                                "text": "yes",
+                                "type": "button",
+                                "value": "yes"
+                              },
+                              {
+                                "name": "no",
+                                "text": "no",
+                                "type": "button",
+                                "value": "no"
+                              }
+                            ]
                           }
                         ]
                       }
-                    ]
+                    )//post message
                   }
-                )//post message
+                })
+                // interactive message code
+
               }//pending action does not exist else close
               // console.log(payload);
             })//inner findone close
