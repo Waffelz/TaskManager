@@ -1,4 +1,4 @@
-# Schedulerbot
+# TaskManager
 
 A slack bot that allows team members to actively schedule tasks onto google calendar.
 This project used slack API, google's API.AI, and google calendar api.
