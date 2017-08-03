@@ -26,89 +26,74 @@ rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
 });
 
 rtm.on(RTM_EVENTS.MESSAGE, function(message) {
-    console.log('message: ', message);
+  console.log('message: ', message);
 })
-// rtm.sendMessage = function sendMessage(text, channel) {
-//   return this.send({
-//     text: 'hi',
-//     channel: channel,
-//     type: RTM_API_EVENTS.MESSAGE
-//   });
-// };
 
 
 rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   console.log('message', message.channel);
 
   var dm = rtm.dataStore.getDMByUserId(message.user);
- if (!dm || dm.id !== message.channel || message.type !== 'message') {
-   return;
- }
+  if (!dm || dm.id !== message.channel || message.type !== 'message') {
+    return;
+  }
   var userMsg = message.text;
   var userId = message.user;
 
-var userobj=rtm.dataStore.getUserById(userId)
-var dbuser;
-  models.User.findOne({slack_id: userId}, function(err, user){
-    console.log('HERE YOU ARE', user)
-    dbuser=user
-  })
+  var userobj=rtm.dataStore.getUserById(userId)
 
-    if(!dbuser){
-      console.log('gonna save user')
-      var u = new models.User({
-        slack_id: userId,
-        slack_username: userobj.name,
-        slack_email: userobj.profile.email,
-        // slack_dmid: userobj.slack_dmid,
-      });
-
-      u.save(function(err, user) {
-        if (err) {
-          console.log('CHECK', err);
-        } else {
-          dbuser=user
-        console.log('SAVED', user);
-        var authlink= process.env.DOMAIN + '/connect?auth_id='+dbuser._id
-        rtm.sendMessage('Grant me access '+ authlink, message.channel)
-      }
-    });
-  } else if (!dbuser.google){// Check if Google Key exists
-    console.log('checking google key')
-      var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
-      rtm.sendMessage('Grant me access '+ authlink, message.channel)
-    } else {
-      //proceed to api.ai
-      axios.post(
-        'https://api.api.ai/api/query?v=20150910', {
-          query: userMsg,
-          timezone: "America/Los_Angeles",
-          lang: "en",
-          sessionId: userId,
-        }, {
-          headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
-        }
-      ).then(function(payload) {
-        //console.log("this is your data");
-      //  if (payload.data.result.actionIncomplete)
-        //rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-        // else {
-        //   rtm.sendMessage("I'm creating a reminder for you about " + payload.data.result.parameters.subject+ "on" + payload.data.result.parameters.date)
-        // }
-
-        // if (payload.data.result.action.split('.')[0] === "smalltalk")
-        //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-
-        rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
-        models.User.findOne({
-          slack_id: userId
-        }, function(err, user){
-          console.log("BELOW IS USER")
-          console.log(user)
+  models.User.findOne({slack_id: userId}, function(err, user) {
+    if (err) {
+      console.log('err', err);
+    } else if (!user) {
+      //do anything you need to do knowing you have no user
+        console.log('gonna save user')
+        var u = new models.User({
+          slack_id: userId,
+          slack_username: userobj.name,
+          slack_email: userobj.profile.email,
+          // slack_dmid: userobj.slack_dmid,
+        });
+        u.save(function(err, user) {
           if (err) {
-            console.log(err);
+            console.log('CHECK', err);
+          } else {
+            console.log('SAVED', user);
+            var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
+            rtm.sendMessage('Grant me access '+ authlink, message.channel)
           }
-          else if (! payload.data.result.actionIncomplete) {
+        });
+    } else if (!user.google) {// Check if Google Key exists
+        console.log('checking google key')
+        var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
+        rtm.sendMessage('Grant me access '+ authlink, message.channel)
+      } else {
+        //proceed to api.ai
+        axios.post(
+          'https://api.api.ai/api/query?v=20150910', {
+            query: userMsg,
+            timezone: "America/Los_Angeles",
+            lang: "en",
+            sessionId: userId,
+          }, {
+            headers: {'Authorization': `Bearer ${process.env.API_AI_TOKEN}`}
+          }
+        ).then(function(payload) {
+
+
+          // if (payload.data.result.action.split('.')[0] === "smalltalk")
+          //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+
+          rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+          models.User.findOne({
+            slack_id: userId
+          }, function(err, user){
+            console.log("BELOW IS USER")
+            console.log(user)
+            if (err) {
+              console.log(err);
+            }
+            else if (! payload.data.result.actionIncomplete) {
               user.pendingAction = {
                 date: payload.data.result.parameters.date,
                 subject: payload.data.result.parameters.subject,
@@ -122,17 +107,6 @@ var dbuser;
                   console.log('pending action updated')
                 }
               })
-              // new models.Task({
-              //   date: payload.data.result.parameters.date,
-              //   subject: payload.data.result.parameters.subject,
-              //   user_id: user.id,
-              //   pending: true // switch when you actually save the task
-              // }).save(function(err, task) {
-              //   if (err)
-              //     console.log(err)
-              //   else
-              //     console.log('saved ', task)
-              // })
               console.log("hey");
               web.chat.postMessage(
                 message.channel,
@@ -162,72 +136,20 @@ var dbuser;
                     }
                   ]
                 }
-              )
-            }//else if bracket
+              )//post message 
+            }//pending action does not exist else close
             // console.log(payload);
-          })//inner findone bracket
+          })//inner findone close
           .catch(function(err) {
-             console.log('eerrrrr', err)
+            console.log('eerrrrr', err)
           })
 
-        })//payload bracket
+        })//payload then close
+      };//google authed close else
+    });//findone close
+});//onmessage close
 
-      //   if (! payload.data.result.actionIncomplete) {
-      //     // new models.Task({
-      //     //   date: payload.data.result.parameters.date,
-      //     //   subject: payload.data.result.parameters.subject,
-      //     //   user_id: user.id,
-      //     //   pending: true // switch when you actually save the task
-      //     // }).save(function(err, task) {
-      //     //   if (err)
-      //     //     console.log(err)
-      //     //   else
-      //     //     console.log('saved ', task)
-      //     // })
-      //     console.log("hey");
-      //     web.chat.postMessage(
-      //       message.channel,
-      //       "Aight imma make a reminder: ",
-      //       {
-      //         "text": "Would you like me to set the reminder right now?",
-      //         "attachments": [
-      //           {
-      //             "fallback": "You have to pick",
-      //             "callback_id": "confirmation",
-      //             "color": "#000",
-      //             "attachment_type": "default",
-      //             "actions": [
-      //               {
-      //                 "name": "yes",
-      //                 "text": "yes",
-      //                 "type": "button",
-      //                 "value": "yes"
-      //               },
-      //               {
-      //                 "name": "no",
-      //                 "text": "no",
-      //                 "type": "button",
-      //                 "value": "no"
-      //               }
-      //             ]
-      //           }
-      //         ]
-      //       }
-      //     )
-      //   }
-      //   // console.log(payload);
-      // }).catch(function(err) {
-      //   // console.log('eerrrrr', err)
-      // })
-    }//if google authed bracket
-});//onmessage bracket
 
-// var slackUser = rtm.dataStore.getUserById(msg.user) // ALL STILL IN THE RTM ON FUNCTION
-// if (!slackUser) {
-//   throw error
-// }
-
-// create a route called interactive where we get a message
 
 
 //rtm.start();
