@@ -18,6 +18,10 @@ var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}))
 
+app.get('/', function(req, res) {
+  res.send(200);
+})
+
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
  if(req.query.auth_id){
