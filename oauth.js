@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var connect = process.env.MONGODB_URI;
 var models = require('./models');
-var {rtm, web} =require('./bot')
+var {rtm, web} =require('./fakeFakeBot')
 var google = require('googleapis');
 var calendar = google.calendar('v3');
 var OAuth2 = google.auth.OAuth2;
@@ -107,7 +107,7 @@ app.post('/interactive', function(req, res) {
   //find the user in db, looking 'pending field for task info and make the event' only if action is yes
     if (wutDidTheySay === 'yes') {
       var event = {
-        'summary': 'task',
+        'summary': 'hi',
         'start': {
           'date': new Date(),
           'time': 'America/Los_Angeles'
