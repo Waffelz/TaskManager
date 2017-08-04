@@ -108,6 +108,7 @@ app.post('/interactive', function(req, res) {
   }, function (err, user){
     if (err) {
       console.log('Found user err is', err);
+      res.end();
     } else {
       oauth2Client.setCredentials(user.google)
       console.log("THIS IS THE USER")

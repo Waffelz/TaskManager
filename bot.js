@@ -56,6 +56,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
           } else {
             var authlink= process.env.DOMAIN + '/connect?auth_id='+user._id
             rtm.sendMessage('Grant me access '+ authlink, message.channel)
+            console.log('enchantee')
           }
         });
     } else if (!user.google) {// Check if Google Key exists
