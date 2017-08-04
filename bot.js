@@ -35,7 +35,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
   }
   var userMsg = message.text;
   var userId = message.user;
-
+  var channel=message.channel
   var userobj=rtm.dataStore.getUserById(userId)
 
   models.User.findOne({slack_id: userId}, function(err, user) {
@@ -48,7 +48,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
           slack_id: userId,
           slack_username: userobj.name,
           slack_email: userobj.profile.email,
-          slack_dmid: message.channel,
+          slack_dmid: channel,
         });
         u.save(function(err, user) {
           if (err) {
@@ -85,6 +85,8 @@ rtm.on(RTM_EVENTS.MESSAGE, function (message) {
             //   rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
 
             rtm.sendMessage(payload.data.result.fulfillment.speech, message.channel)
+
+            console.log('PAYLOAD SPEECH', payload.data.result.fulfillment.speech)
             models.User.findOne({
               slack_id: userId
             }, function(err, user){
