@@ -11,16 +11,10 @@ var google = require('googleapis');
 var calendar = google.calendar('v3');
 var OAuth2 = google.auth.OAuth2;
 
-Task = models.Task
-
 mongoose.connect(connect);
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}))
-
-app.get('/', function(req, res) {
-  res.send(200);
-})
 
 // generate id: with mongoose user model
 app.get('/connect', function(req, res){
@@ -93,6 +87,7 @@ var code=req.query.code
 
 // after authentication when user hits interactive message
 app.post('/interactive', function(req, res) {
+  console.log('ENTERED INTERACTIVE')
   var oauth2Client = new OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -108,17 +103,29 @@ app.post('/interactive', function(req, res) {
   }, function (err, user){
     if (err) {
       console.log('Found user err is', err);
-      res.end();
     } else {
       oauth2Client.setCredentials(user.google)
-      console.log("THIS IS THE USER")
-      console.log(user)
+      console.log("****", user);
       channel= user.pendingAction.channel
       var wutDidTheySay = b0dy.actions[0].name;
       //var slackID = b0dy.user.id;
       //var tasks = Task.find({user_id:slackID});
+      var timeInMs = Date.now()
+       if (timeInMs > user.google.expiry_date){
+         oauth2Client.refreshAccessToken(function(err, tokens) {
+           oauth2Client.setCredentials(tokens);
+           user.google=tokens
+           user.save(function(err, user) {
+             if (err) {
+               console.log('ERR REFRESHING TOKENS', err);
+             } else {
+               console.log('REFRESHed TOKENS');
+             }
+           });
+         })
+       }
         if (wutDidTheySay === 'yes') {
-          console.log('selected yes')
+          console.log('INTERACTIVE YES')
           var event = {
             'summary': user.pendingAction.subject,
             'start': {
@@ -137,13 +144,26 @@ app.post('/interactive', function(req, res) {
             }
             // save event based on google calendar api to save task
           };
-          console.log('event created')
+          var task= models.Task({
+            date: event.start.date,
+            subject: event.summary,
+            requesterId: user.slack_id,
+            requesterchannel: user.slack_dmid,
+          })
+          task.save(function(err, user) {
+            if (err) {
+              console.log('CHECK', err);
+            } else {
+              console.log('NEW TASK SAVED')
+            }
+          })
+
           user.pendingAction=null
           user.save(function(err, user) {
             if (err) {
               console.log('CHECK', err);
             } else {
-              console.console.log('cleared pending action');
+              console.log('cleared pending action');
             }
         })
         calendar.events.insert({
@@ -162,13 +182,13 @@ app.post('/interactive', function(req, res) {
       }
 
       if (wutDidTheySay === 'no'){
-        console.log('selected no')
+        console.log('INTERACTIVE NO')
         user.pendingAction=null
         user.save(function(err, user) {
           if (err) {
             console.log('CHECK', err);
           } else {
-          console.log('NAAAAAAA');
+            console.log('cleared pending action');
             rtm.sendMessage("Ok! I won't add the task!", channel)
           }
       })
@@ -176,13 +196,13 @@ app.post('/interactive', function(req, res) {
 
       res.end();
     }
-  })
+  });
 
 })
 
 rtm.start()
 var port = process.env.PORT || 3000;
-app.listen(port);
+app.listen(3000);
 console.log('Express started. Listening on port %s', port);
 
 module.exports = app;
